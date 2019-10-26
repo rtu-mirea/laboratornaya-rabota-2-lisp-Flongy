@@ -1,0 +1,57 @@
+#!/bin/sh
+#|-*- mode:lisp -*-|#
+#|
+exec ros -Q -- $0 "$@"
+|#
+(progn ;;init forms
+  (ros:ensure-asdf)
+  ;;#+quicklisp(ql:quickload '() :silent t)
+  )
+
+;; Лабораторная работа №2
+;; Вставка в список по номеру позиции
+(defun pos_insert(lst pos val)
+  ;; lst - list, pos - позиция, val - значение
+  (if (>= (list-length lst) pos)
+    (loop for i from 0 to (- (list-length lst) 1)
+      if (= i pos) collect val collect (nth i lst))
+    (append lst (list val))
+  )
+)
+
+;; Удаление из списка по номеру позиции
+(defun pos_delete(lst pos)
+  ;; lst - list, pos - позиция
+  (if (>= (list-length lst) pos)
+    (loop for i from 0 to (- (list-length lst) 1)
+      if (/= i pos) collect (nth i lst))
+    lst
+  )
+)
+
+;; Поиск элемента по значению
+(defun find_val(lst val)
+  ;; lst - list, val - значение
+  (loop for i from 0 to (- (list-length lst) 1)
+    if (= (nth i lst) val) collect i)
+)
+
+(defvar x (list 3 6 7 4 5 9 8 7 9))
+
+(defun main (&rest argv)
+  (declare (ignorable argv))
+  (format t "Начальный список: ~D~%~%" x)
+
+  (format t "Вставка в список:~%~D~%" (pos_insert x 16 100))
+  (format t "Вставка в список:~%~D~%" (pos_insert x  3 150))
+
+  (format t "~%")
+
+  (format t "Удаление из списка:~%~D~%" (pos_delete x 1))
+  (format t "Удаление из списка:~%~D~%" (pos_delete x 9))
+
+  (format t "~%")
+
+  (format t "Поиск элемента в списке:~%~D~%" (find_val x 9))
+)
+;;; vim: set ft=lisp lisp:
