@@ -1,0 +1,55 @@
+#!/bin/sh
+#|-*- mode:lisp -*-|#
+#|
+exec ros -Q -- $0 "$@"
+|#
+(progn ;;init forms
+  (ros:ensure-asdf)
+  ;;#+quicklisp(ql:quickload '() :silent t)
+  )
+
+;; Сжатие списка
+(defun compress(lst &aux (cur (car lst)) (len 1) tail)
+  ;; lst - list
+  ;; cur - рассматриваемое значение (первый элемент списка)
+  ;; len - длина одинаковых значений подряд
+  (cons
+   (if (= cur (cadr lst))
+     ; Несколько одинаковых элементов подряд в формате (n a).
+     ;   a - элемент, n - количество
+     (list
+        (setq len (loop for i in lst
+                     when (/= i cur) do (loop-finish)
+                     count t))
+        cur)
+     ; Единственное число
+     cur)
+   ; Если список не полностью просмотрен, продолжать сжатие
+   (if (setq tail (subseq lst len)) (compress tail)))
+)
+
+;; Расжатие списка
+(defun decompress(lst)
+  ;; lst - list
+  (loop for el in lst
+    ; единственное число: записать как есть
+    if (integerp el) collect el
+    ; списки: развернуть в списки одинаковых элементов (5 1) = (1 1 1 1 1) и конкатенировать
+    if (listp el) nconc (make-list (car el) :initial-element (cadr el))))
+
+
+(defvar x (list 1 1 1 1 0 1 0 0 0 0 0 0 1 1 2 2 2 2 2))
+(defvar comp_list (compress x))
+(defvar decomp_list (decompress comp_list))
+
+(defun main (&rest argv)
+  (declare (ignorable argv))
+  (format t "Начальный список: ~D~%" x)
+  (format t "Сжатый: ~D~%" comp_list)
+  ; > ((4 1) 0 1 (6 0) (2 1) (5 2))
+  (format t "Расжатый: ~D~%" decomp_list)
+  (if (equal x decomp_list)
+    (format t "Расжатие прошло успешно~%")
+    (format t "Список расжат с ошибкой~%"))
+)
+;;; vim: set ft=lisp lisp:
